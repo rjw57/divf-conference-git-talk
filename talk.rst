@@ -72,6 +72,9 @@ Git is very simple in essence. Everything in git's data model has a name and tha
 contents. This simple model has a very large advantage: if person A and B call something by the same name, they're the
 same thing.
 
+Basic usage
+-----------
+
 Let's see how git represents the state of your directory on disk. Let's set up a git repository. It's slightly easier
 than setting up a SVN repo:
 
@@ -484,5 +487,95 @@ parent commit.
 
 The 'show' command is a good jack of all trades. It knows how to show a commit, tree or blob and requires only the
 name.
+
+If using the command line is all too much for you, there is a nice GUI browser for the repository called 'gitk'. It can
+be run from the repository directory directly.
+
+.. code::
+
+    $ gitk
+
+The gitk program might be ugly but it is fast and very usable.
+
+.. figure:: gitk-screenshot.png
+
+    The gitk program browsing the history of our repository.
+
+Rebasing
+--------
+
+I'm going to create a bit of a contrived example here. Rebasing is one of git's most powerful features and I'm going to
+skim over it. It's most useful when you need to 'fix up' your repository if you've accidentally committed a huge binary
+file or if you've written something truly awful about your supervisor in a commit message. The 'rebase' command let's
+you replay history from some starting point. In my case I want to pretend that I named the research directions file
+correctly from the start. This means I want to replay history starting from three commits back and to merge the rename
+commit into the original one. This is where the rebase command is most useful.
+
+The '-i' option to rebase says that you want to rebase interactively. This means that you want to specify both the order
+of the commits to replay and, optionally, any actions you want to do on them. Let's merge the renaming commit into the
+previous one.
+
+.. code::
+
+    $ git rebase -i HEAD^^^
+
+This shows a new way of naming commits. The commit 'HEAD' always refers to the head commit. Appending a '^' moves up the
+chain of parent commits. This pops up an editor with the following:
+
+.. code::
+
+    pick 323d61b added some notes on possible research directions
+    pick 25caf22 renamed research directions file to be consistent
+    pick c31ab6c add a Miss World research direction
+
+    # Rebase 9283c67..c31ab6c onto 9283c67
+    #
+    # Commands:
+    #  p, pick = use commit
+    #  r, reword = use commit, but edit the commit message
+    #  e, edit = use commit, but stop for amending
+    #  s, squash = use commit, but meld into previous commit
+    #  f, fixup = like "squash", but discard this commit's log message
+    #  x, exec = run command (the rest of the line) using shell
+    #
+    # If you remove a line here THAT COMMIT WILL BE LOST.
+    # However, if you remove everything, the rebase will be aborted.
+    #
+
+The rebase command will replay the commits in this file in the order specified. We can optionally stop to edit the
+commit, reword the commit message or merge it into the previous commit. We want to do the latter. Editing the commit
+means that rebase will stop when it gets to that commit and then you can edit it using the '--amend' option we used
+above. Issuing the  'git rebase --continue' command will continue the rebasing.
+
+In our case, we want to treat the rename commit as a 'fixup'. We edit the file to look like this:
+
+.. code::
+
+    pick 323d61b added some notes on possible research directions
+    f 25caf22 renamed research directions file to be consistent
+    pick c31ab6c add a Miss World research direction
+
+Then we save and quit our editor. The whole process looks like this:
+
+.. code::
+
+    $ git rebase -i HEAD^^^
+    [detached HEAD 7b8ea6f] added some notes on possible research directions
+     1 file changed, 6 insertions(+)
+     create mode 100644 research-directions.txt
+    Successfully rebased and updated refs/heads/master.
+
+The log confirms our change.
+
+.. code::
+
+    $ git log --oneline
+    df4870e add a Miss World research direction
+    7b8ea6f added some notes on possible research directions
+    9283c67 initial commit of the todo list
+
+Note that each commit starting from the one we changed has also got a new name. This makes sense since it has changed
+its content.
+
 
 .. vim:tw=120:spell:spelllang=en_gb:sw=4:sts=4:et
