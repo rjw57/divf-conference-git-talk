@@ -732,6 +732,10 @@ It says we should add a README. Let's do that:
 
 And it is done.
 
+.. figure:: github-readme.png
+
+    Our new README on github.
+
 Conclusions
 -----------
 
