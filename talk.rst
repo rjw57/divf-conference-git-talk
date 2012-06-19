@@ -29,17 +29,64 @@ as a solution for backup and rollback, although it certainly works as such. Rath
 that lets you experiment freely without having to come up with lots of files named 'algorithm.m', 'algorithm-v2.m',
 'algorithm-v1-working.m', etc.
 
+What not to do
+--------------
+
+I'm sure you all have a directory called 'research' or the like where you put directories containing your projects. It's
+tempting when you start a new project to just create a directory within the research directory for it::
+
+    research/
+    └── myproject
+
+You do all your work in 'myproject' and at some point you need to start writing a paper on it. Well, you don't want your
+research to be stalled during the paper writing so perhaps you make a copy::
+
+    research/
+    ├── myproject
+    └── myproject-paper-1
+
+Then you can work on 'myproject' keeping 'myproject-paper-1' pristine for write-up purposes. Then your students want a
+copy. Well, you do a bit of tidy up and give them a copy. Better keep what you gave them around for future reference::
+    
+    research/
+    ├── myproject
+    ├── myproject-paper-1
+    └── myproject-students-mich-2012
+
+While writing the paper you find you have made a few mistakes and so you manually copy them into 'myproject'. Also the
+reviewers' comments come back and you need to re-run a few things. Do you modify the 'myproject-paper-1' directory or
+add a new one? All of these directories are cluttering your research directory and so you decide to rearrange them a
+bit::
+
+    research/
+    └── myproject
+        ├── branches
+        │   ├── paper-1
+        │   └── students-mich-2012
+        └── trunk
+
+That's nicer. But now you can't remember which version of what has whose changes in them. This solution wont scale and
+so you start with SVN.
+
+This, by the way, is aimed at those who say "I don't need branches." Yes, you do. You branch all the time but you do it
+in an *ad hoc* manner, either by copying entire directories, files within directories or commenting out code blocks.
+What you mean is that "branching is harder than keeping multiple copies around." If this is true, it is the fault of
+your tool, not branching. 
+
 The competitior: SVN
 --------------------
 
-If you're using SVN already then you're already doing something right. SVN is a good tool for the single developer. It's
-easy to learn and straightforward in its operation. If you're happy with SVN, then I hope to convince you that git gives
-you everything SVN does but with some advantages. If you're using CVS, there's no help for you.
+If you're using SVN already then you're already doing something right. SVN is a good tool for the single developer. In
+recent years it has also got a lot better at what it does, at the cost of requiring access to the server for more than
+checkin/checkout. It's easy to learn and straightforward in its operation. If you're happy with SVN, then I hope to
+convince you that git gives you everything SVN does but with some advantages. If you're using CVS, there's no help for
+you.
 
-I keep everything in a git repository. Not a single repository, a different one for each project. If you're a SVN user
-this distinction is not obvious. A SVN server will present a single versioned filesystem and projects use a naming
-convention within it to separate themselves. For example, your latest paper might be in the 'foo-paper' directory.
-Traditionally the directory under that is called something like 'trunk' and branches of development are in 'branches'.
+SVN is a source code revision system which keeps, logically, a snapshot of each 'revision' of a directory on a server. A
+SVN server will present a single versioned filesystem and projects use a naming convention within it to separate
+themselves. For example, your latest paper might be in the 'foo-paper' directory.  Traditionally the directory under
+that is called something like 'trunk' and branches of development are in 'branches'. This is very much like the final
+form of the 'myproject' example above.
 
 SVN lets you make a change to this entire hierarchy and label it with a revision number. Revision numbers are unrelated
 to the change and are strictly increasing. Any other features are purely by convention. For example to 'branch' a
@@ -47,9 +94,46 @@ project to experiment on it, you copy the 'trunk' directory into the 'branches/e
 commit to that branch increases the global revision number. Someone looking at the trunk directory alone will not see
 your changes but can infer them by the fact that the revision number keeps mysteriously increasing.
 
-Merging a branch back into the trunk is a pretty manual affair. Essentially the svn tool looks at the contents of
-'branches/experiment-with-bar' and 'trunk' and tries to make one look like the other. If nothing has changed in 'trunk',
-this is easy but it gets tricky when both have changed.
+Merging a branch back into the trunk is a pretty manual affair. Essentially the client-side svn tool looks at the
+contents of 'branches/experiment-with-bar' and 'trunk' and tries to make one look like the other. If nothing has changed
+in 'trunk', this is easy but it gets tricky when both have changed.
+
+.. code::
+
+    r1  r2  r3  r4  r5  r6
+
+    A/  A/  A/  A/  A/  A/
+          
+            B/  B/  B/  B/
+
+Consider the repository above. 'B' is a branch of 'A' but the SVN server doesn't know that: branching is entirely
+based on naming conventions. Some of r3-r5 change 'A', some change 'B'. Since the filesystem as a whole is versioned, it
+isn't clear particularly which is changed by what. All those working on 'A' know is that sometimes the revision numbers
+jump. Now we want to merge the latest changes from 'A' back into 'B'. Merges are done client-side. That is, the SVN
+client checks out the latest version (r6) and tries to merge the changes from 'A' into 'B'. The problem is, the client
+doesn't *know* what the changes are. The changes to 'A' are the changes from r2 to r6 and the changes to 'B' are those
+from 'A' in r2 to 'B' in r6 (the fact that 'B' is a branch of 'A' isn't recorded).
+
+.. code::
+
+    r1  r2  r3  r4  r5  r6
+
+               D1
+          _____________
+         /             \
+    A/  A/  A/  A/  A/  A/ -.
+        |                    )-- D3
+        |   B/  B/  B/  B/ -'
+         \_____________/
+
+               D2
+
+In order to merge properly, you should really be looking at merging the *changes* D1 and D2. But the SVN client doesn't
+know those changes since it only has r6 on disk. Instead it had to do it via 'D3'. Considering the common ancestor in a
+merge is known as a 'three-way merge' and is often far better at resolving merges since it can consider the *context* of
+a change. SVN *can* do three-way merge (via the `--reintegrate` option) but it requires being able to talk to the
+server. It is also an all or nothing affair since the database isn't stored locally, if the server can't continue the
+merge at one point, it can't ask for user input; instead it must simply abort the merge.
 
 In the SVN model, the history is stored on the SVN server and each 'checkout' is a copy of the filesystem at a specific
 revision. So when you're merging 'branches/experiment-with-bar' and 'trunk', the only thing on your disk is a copy of
@@ -58,8 +142,14 @@ Generally when you're merging, it's not the state of the trunk and branch you wa
 that got you there. You don't know those changes unless you have all the intermediate changes between you and the common
 ancestor.
 
-Git's model
------------
+SVN is a fine version control system by the way. It does exactly what it sets out to and does it well. It works well for
+the use-case where you want a linear flow of history (i.e. sequential backups) and/or enforce central storage of source
+code. It makes branching easy but, as a consequence of its other advantages, it makes merging slow. It also, as a
+corollary to this, means that changes are 'commit once'. There's no mechanism for shepherding changess from initial
+commit through staging branches and finally into trunk.
+
+Git
+---
 
 Git uses a different approach to SVN. For a start, the entire database is on your disk. The reason that this is useful
 is that git has available to it your entire history up until that point. Suddenly when you can browse the history of
@@ -73,7 +163,7 @@ contents. This simple model has a very large advantage: if person A and B call s
 same thing.
 
 Basic usage
------------
+'''''''''''
 
 Let's see how git represents the state of your directory on disk. Let's set up a git repository. It's slightly easier
 than setting up a SVN repo:
@@ -401,7 +491,7 @@ which have at some point been added to the repository.
     [master d293464] add a Miss World research direction
      1 file changed, 1 insertion(+)
 
-Annoyingly, I made a typo there. And I've already committed. Luckily there is an '--amend' option to let you amend the
+Annoyingly, I made a typo there. And I've already committed. Luckily there is an `--amend` option to let you amend the
 previous commit. The 'log' command can be used to print the last few commits. Note the commit name:
 
 .. code::
@@ -437,7 +527,7 @@ the most recent commit on the branch you're working on is called the 'head'.
     -4. Solve word hunger
     +4. Solve world hunger
 
-Looks good: we should commit it. Using '--amend' means that the change replaces the current head keeping it's commit
+Looks good: we should commit it. Using `--amend` means that the change replaces the current head keeping it's commit
 message.
 
 .. code::
@@ -502,7 +592,7 @@ The gitk program might be ugly but it is fast and very usable.
     The gitk program browsing the history of our repository.
 
 Rebasing
---------
+''''''''
 
 I'm going to create a bit of a contrived example here. Rebasing is one of git's most powerful features and I'm going to
 skim over it. It's most useful when you need to 'fix up' your repository if you've accidentally committed a huge binary
@@ -511,7 +601,7 @@ you replay history from some starting point. In my case I want to pretend that I
 correctly from the start. This means I want to replay history starting from three commits back and to merge the rename
 commit into the original one. This is where the rebase command is most useful.
 
-The '-i' option to rebase says that you want to rebase interactively. This means that you want to specify both the order
+The `-i` option to rebase says that you want to rebase interactively. This means that you want to specify both the order
 of the commits to replay and, optionally, any actions you want to do on them. Let's merge the renaming commit into the
 previous one.
 
@@ -544,7 +634,7 @@ chain of parent commits. This pops up an editor with the following:
 
 The rebase command will replay the commits in this file in the order specified. We can optionally stop to edit the
 commit, reword the commit message or merge it into the previous commit. We want to do the latter. Editing the commit
-means that rebase will stop when it gets to that commit and then you can edit it using the '--amend' option we used
+means that rebase will stop when it gets to that commit and then you can edit it using the `--amend` option we used
 above. Issuing the  'git rebase --continue' command will continue the rebasing.
 
 In our case, we want to treat the rename commit as a 'fixup'. We edit the file to look like this:
@@ -577,5 +667,81 @@ The log confirms our change.
 Note that each commit starting from the one we changed has also got a new name. This makes sense since it has changed
 its content.
 
+Sharing
+'''''''
+
+Your project is now going on apace but you need to share it with your students. A git 'server' is simply a repository
+which is accessible over a network. Git's network model is essentially just making one repository look like another. In
+our repository, 'master' is just a synonym for 'df4870e'. To 'push' this repository to a server, you need only tell it
+that it should make it's master 'df4870e' too. The server then can ask for the contents of any objects whose name it
+does not yet recognise.
+
+Let's share our repository. I've been to github.com and set up an account, SSH key and created a repository as per the
+instructions on the site. Now I need to tell git about the remote repository:
+
+.. code::
+
+    $ git remote add origin https://github.com/rjw57/repo-example.git
+
+Making the remote 'origin' look like this repository is simply a case of using 'git push':
+
+.. code::
+
+    $ git push --set-upstream origin master
+    Counting objects: 9, done.
+    Delta compression using up to 4 threads.
+    Compressing objects: 100% (8/8), done.
+    Writing objects: 100% (9/9), 993 bytes, done.
+    Total 9 (delta 1), reused 0 (delta 0)
+    To git@github.com:rjw57/repo-example.git
+     * [new branch]      master -> master
+    Branch master set up to track remote branch master from origin.
+
+The `--set-upstream` option tells git push to remember that the 'master' branch in this repository maps to the 'master'
+branch in the 'origin' remote. (You can have more than one remote by the way.)
+
+If we go to github.com, we can see that the code is there.
+
+.. figure:: github-repo.png
+
+    Our freshly shared github repository.
+
+It says we should add a README. Let's do that:
+
+.. code::
+
+    $ cat >README.rst <<EOF
+    > My research plans
+    > -----------------
+    >
+    > This repository contains my research planning and TODO list.
+    > EOF
+    $ git add README.rst
+    $ git commit -m 'added a README'
+    [master c07bd43] added a README
+     1 file changed, 4 insertions(+)
+     create mode 100644 README.rst
+    $ git push
+    Counting objects: 4, done.
+    Delta compression using up to 4 threads.
+    Compressing objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 400 bytes, done.
+    Total 3 (delta 0), reused 0 (delta 0)
+    To git@github.com:rjw57/repo-example.git
+       df4870e..c07bd43  master -> master
+
+And it is done.
+
+Conclusions
+-----------
+
+This talk has only presented the barest introduction to git. For a start I would, if I had had time, talked more about
+the 'branch early, branch often' workflow which I would advocate. In this workflow, all of your work takes place in
+branches and 'master' only gets merges from those branches.
+
+The take away from my talk is *not* about branching or merging, however. It is that a) git is not scary and b) it is far
+easier to set up a repository than SVN. It is so easy that every single project I start now gets its own git repository.
+Even if I think it is going to be a write once, throwaway project I make it a git repository. Since typing 'git init' is
+so easy, why not? Then, if it gains legs, you can trivially publish it to the world or make it into a true project.
 
 .. vim:tw=120:spell:spelllang=en_gb:sw=4:sts=4:et
