@@ -736,6 +736,16 @@ And it is done.
 
     Our new README on github.
 
+Also, not git
+-------------
+
+Although this talk has been on git and has covered some differences from SVN, I'm not advocating git as a panacea. For
+me, it works well. If SVN works well for you, then great. There are other source control tools as well: mercurial,
+darcs, bazaar, bitkeeper, perforce, dare I say it, Visual Source Safe? The point I'd like to make is that you should
+*always* be looking to see if there is a better tool. You may find that any one of those tools matches your internal
+workflow better than git or SVN. And if you don't use source control at the moment: do so, if only for the painless
+backups.
+
 Conclusions
 -----------
 
