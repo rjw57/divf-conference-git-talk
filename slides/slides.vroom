@@ -1,0 +1,134 @@
+# Edit this file with your content. Then run `vroom --vroom` to start
+# the show!
+#
+# See `perldoc Vroom` for complete details.
+#
+# vim:sw=4:sts=4:et
+---- config
+# Basic config options.
+title: An Introduction to Git
+indent: 5
+#height: 18
+#width: 69
+auto_size: 1
+skip: 0
+vimrc: |
+    set nospell
+    set nonumber
+
+---- center
+
+An Introduction to Git
+
+Rich Wareham (rjw57)
+
+----
+== What *not* to do
+
+----
+
+    research/
+    └── myproject
+
+----
+
+    research/
+    ├── myproject
+    └── myproject-paper-1
+
+----
+    
+    research/
+    ├── myproject
+    ├── myproject-paper-1
+    └── myproject-students-mich-2012
+
+----
+
+    research/
+    └── myproject
+        ├── branches
+        │   ├── paper-1
+        │   └── students-mich-2012
+        └── trunk
+
+----
+== SVN
+
++* If you're using it, good.
++* It's a fine tool.
++* A simple model:
+ * Linear history;
+ * Branching is by convention.
++* Branching is easy.
++* Merging is hard.
++* Only the server knows everything.
+
+----
+
+    r1  r2  r3  r4  r5  r6
+
+    A/  A/  A/  A/  A/  A/
+          
+            B/  B/  B/  B/
+
+----
+
+    r1  r2  r3  r4  r5  r6
+
+               D1
+          _____________
+         /             \
+    A/  A/  A/  A/  A/  A/ -.
+        |                    )-- D3
+        |   B/  B/  B/  B/ -'
+         \_____________/
+
+               D2
+
+---- center
+== git
+
++A demo!
+
+----
+== not git
+
+There are many fine version control tools:
+
+* Mercurial
+* DARCS
+* Bazaar
+* BitKeeper
+* Perforce
+* SVN
++* Visual SourceSafe?
+
+---- center
+== not git
+
+If you're not using source control, do so.
+
++If you have no strong preference, use git.
+
+----
+== Conclusions
+
++* This was only the briefest of introductions.
++* git is easier to use than you might think.
++* Everything should be a repository.
++* Lets you defer the publish/keep/trash decision.
+
+----
+== Resources
+
+* Notes: https://github.com/rjw57/divf-conference-git-talk.
+* Git book: http://git-scm.com/book.
+
+== Me
+
+* Email: Rich Wareham <rjw57@cam.ac.uk>
+* Git: https://github.com/rjw57
+* Google+: http://gplus.to/richwareham
+
+== Questions?
