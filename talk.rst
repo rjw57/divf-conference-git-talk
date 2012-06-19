@@ -748,4 +748,6 @@ easier to set up a repository than SVN. It is so easy that every single project 
 Even if I think it is going to be a write once, throwaway project I make it a git repository. Since typing 'git init' is
 so easy, why not? Then, if it gains legs, you can trivially publish it to the world or make it into a true project.
 
+The notes for this talk are available at: https://github.com/rjw57/divf-conference-git-talk.
+
 .. vim:tw=120:spell:spelllang=en_gb:sw=4:sts=4:et
