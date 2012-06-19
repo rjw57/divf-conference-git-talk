@@ -9,7 +9,7 @@ consumption by a computer which cannot be automatically recreated is software. T
 feed it into a computer and expect some output, then it's software if you're also fairly certain that the first time you
 create it, it will be wrong.
 
-Software spends almost its entire lice-cycle being wrong. And a software engineer is the human who spends their life
+Software spends almost its entire life-cycle being wrong. And a software engineer is the human who spends their life
 fixing it. As researchers we also recognise that research spends most of its life being wrong. If we could create things
 perfectly the first time there is no point in doing research.
 
